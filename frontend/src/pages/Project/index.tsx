@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Space, Modal, Form, Input, message, Card, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined, ApiOutlined, ProfileOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getProjects, createProject, updateProject, deleteProject } from '../../services/project';
 import type { Project } from '../../types/project';
@@ -100,8 +100,10 @@ const ProjectList: React.FC = () => {
       key: 'action',
       render: (_: any, record: Project) => (
         <Space size="middle">
-          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} title="编辑" />
+          <Button type="text" icon={<ApiOutlined />} onClick={() => navigate(`/projects/${record.id}/apis`)} title="接口管理" />
+          <Button type="text" icon={<ProfileOutlined />} onClick={() => navigate(`/projects/${record.id}/test-cases`)} title="用例管理" />
           <Button type="text" icon={<SettingOutlined />} onClick={() => navigate(`/projects/${record.id}`)} title="环境管理" />
+          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} title="编辑" />
           <Popconfirm
             title="确定要删除这个项目吗？"
             description="删除后无法恢复，且会删除关联的所有环境和用例。"

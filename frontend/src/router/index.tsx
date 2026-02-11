@@ -6,6 +6,8 @@ import Dashboard from '../pages/Dashboard';
 import ProjectList from '../pages/Project';
 import ProjectDetail from '../pages/Project/Detail';
 import ApiManagement from '../pages/Interface';
+import TestCaseList from '../pages/TestCase';
+import TestCaseDetail from '../pages/TestCase/Detail';
 import MainLayout from '../components/MainLayout';
 
 // Simple Auth Guard
@@ -29,6 +31,8 @@ const AppRouter: React.FC = () => {
           <Route path="projects" element={<ProjectList />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="projects/:id/apis" element={<ApiManagement />} />
+          <Route path="projects/:id/test-cases" element={<TestCaseList />} />
+          <Route path="projects/:id/test-cases/:caseId" element={<TestCaseDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>
