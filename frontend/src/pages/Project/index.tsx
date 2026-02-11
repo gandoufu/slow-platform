@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Space, Modal, Form, Input, message, Card } from 'antd';
+import { Table, Button, Space, Modal, Form, Input, message, Card, Popconfirm } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { getProjects, createProject } from '../../services/project';
+import { getProjects, createProject, updateProject, deleteProject } from '../../services/project';
 import type { Project } from '../../types/project';
 
 const ProjectList: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
@@ -28,16 +29,44 @@ const ProjectList: React.FC = () => {
     fetchProjects();
   }, []);
 
-  const handleCreate = async (values: any) => {
+  const handleSubmit = async (values: any) => {
     try {
-      await createProject(values);
-      message.success('项目创建成功');
+      if (editingProject) {
+        await updateProject(editingProject.id, values);
+        message.success('项目更新成功');
+      } else {
+        await createProject(values);
+        message.success('项目创建成功');
+      }
       setIsModalOpen(false);
+      setEditingProject(null);
       form.resetFields();
       fetchProjects();
     } catch (error) {
-      console.error('创建项目失败', error);
+      console.error(editingProject ? '更新项目失败' : '创建项目失败', error);
     }
+  };
+
+  const handleEdit = (project: Project) => {
+    setEditingProject(project);
+    form.setFieldsValue(project);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteProject(id);
+      message.success('项目删除成功');
+      fetchProjects();
+    } catch (error) {
+      console.error('删除项目失败', error);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    setEditingProject(null);
+    form.resetFields();
   };
 
   const columns = [
@@ -71,9 +100,17 @@ const ProjectList: React.FC = () => {
       key: 'action',
       render: (_: any, record: Project) => (
         <Space size="middle">
-          <Button type="text" icon={<EditOutlined />} title="编辑" />
+          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} title="编辑" />
           <Button type="text" icon={<SettingOutlined />} onClick={() => navigate(`/projects/${record.id}`)} title="环境管理" />
-          <Button type="text" danger icon={<DeleteOutlined />} title="删除" />
+          <Popconfirm
+            title="确定要删除这个项目吗？"
+            description="删除后无法恢复，且会删除关联的所有环境和用例。"
+            onConfirm={() => handleDelete(record.id)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button type="text" danger icon={<DeleteOutlined />} title="删除" />
+          </Popconfirm>
         </Space>
       ),
     },
@@ -84,7 +121,7 @@ const ProjectList: React.FC = () => {
       <Card
         title="项目列表"
         extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingProject(null); form.resetFields(); setIsModalOpen(true); }}>
             新建项目
           </Button>
         }
@@ -99,12 +136,12 @@ const ProjectList: React.FC = () => {
       </Card>
 
       <Modal
-        title="新建项目"
+        title={editingProject ? "编辑项目" : "新建项目"}
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={handleCancel}
         onOk={() => form.submit()}
       >
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             name="name"
             label="项目名称"

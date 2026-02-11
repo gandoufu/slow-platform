@@ -13,6 +13,12 @@ export interface ProjectCreate {
   description?: string;
 }
 
+export interface ProjectUpdate {
+  name?: string;
+  description?: string;
+  is_active?: boolean;
+}
+
 export interface Environment {
   id: number;
   name: string;
@@ -27,5 +33,12 @@ export interface EnvironmentCreate {
   name: string;
   code: string;
   base_url: string;
+  description?: string;
+}
+
+export interface EnvironmentUpdate {
+  name?: string;
+  code?: string;
+  base_url?: string;
   description?: string;
 }

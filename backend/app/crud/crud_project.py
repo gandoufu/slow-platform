@@ -41,6 +41,9 @@ def delete_project(db: Session, project_id: int) -> Project:
 def get_environments(db: Session, project_id: int) -> List[Environment]:
     return db.query(Environment).filter(Environment.project_id == project_id).all()
 
+def get_environment(db: Session, environment_id: int) -> Optional[Environment]:
+    return db.query(Environment).filter(Environment.id == environment_id).first()
+
 def create_environment(db: Session, environment: EnvironmentCreate, project_id: int) -> Environment:
     db_env = Environment(
         **environment.model_dump(),
@@ -50,3 +53,18 @@ def create_environment(db: Session, environment: EnvironmentCreate, project_id: 
     db.commit()
     db.refresh(db_env)
     return db_env
+
+def update_environment(db: Session, db_environment: Environment, environment_update: EnvironmentUpdate) -> Environment:
+    update_data = environment_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_environment, field, value)
+    db.add(db_environment)
+    db.commit()
+    db.refresh(db_environment)
+    return db_environment
+
+def delete_environment(db: Session, environment_id: int) -> Environment:
+    db_environment = db.query(Environment).get(environment_id)
+    db.delete(db_environment)
+    db.commit()
+    return db_environment

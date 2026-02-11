@@ -50,6 +50,39 @@ def read_project(
         raise HTTPException(status_code=404, detail="未找到该项目")
     return ApiResponse(data=project)
 
+@router.put("/{project_id}", response_model=ApiResponse[schemas.Project])
+def update_project(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    project_in: schemas.ProjectUpdate,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    更新项目
+    """
+    project = crud.crud_project.get_project(db=db, project_id=project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="未找到该项目")
+    project = crud.crud_project.update_project(db=db, db_project=project, project_update=project_in)
+    return ApiResponse(data=project)
+
+@router.delete("/{project_id}", response_model=ApiResponse[schemas.Project])
+def delete_project(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    删除项目
+    """
+    project = crud.crud_project.get_project(db=db, project_id=project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="未找到该项目")
+    project = crud.crud_project.delete_project(db=db, project_id=project_id)
+    return ApiResponse(data=project)
+
 @router.post("/{project_id}/environments/", response_model=ApiResponse[schemas.Environment])
 def create_environment(
     *,
@@ -64,5 +97,47 @@ def create_environment(
     project = crud.crud_project.get_project(db=db, project_id=project_id)
     if not project:
         raise HTTPException(status_code=404, detail="未找到该项目")
-    environment = crud.crud_project.create_environment(db=db, environment=environment_in, project_id=project_id)
+@router.put("/{project_id}/environments/{environment_id}", response_model=ApiResponse[schemas.Environment])
+def update_environment(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    environment_id: int,
+    environment_in: schemas.EnvironmentUpdate,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    更新环境
+    """
+    project = crud.crud_project.get_project(db=db, project_id=project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="未找到该项目")
+    
+    environment = crud.crud_project.get_environment(db=db, environment_id=environment_id)
+    if not environment:
+        raise HTTPException(status_code=404, detail="未找到该环境")
+        
+    environment = crud.crud_project.update_environment(db=db, db_environment=environment, environment_update=environment_in)
+    return ApiResponse(data=environment)
+
+@router.delete("/{project_id}/environments/{environment_id}", response_model=ApiResponse[schemas.Environment])
+def delete_environment(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    environment_id: int,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    删除环境
+    """
+    project = crud.crud_project.get_project(db=db, project_id=project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="未找到该项目")
+        
+    environment = crud.crud_project.get_environment(db=db, environment_id=environment_id)
+    if not environment:
+        raise HTTPException(status_code=404, detail="未找到该环境")
+        
+    environment = crud.crud_project.delete_environment(db=db, environment_id=environment_id)
     return ApiResponse(data=environment)

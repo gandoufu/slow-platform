@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Descriptions, Tag, Space, Modal, Form, Input, message, Tabs, Typography } from 'antd';
+import { Card, Table, Button, Descriptions, Tag, Space, Modal, Form, Input, message, Popconfirm } from 'antd';
 import { ArrowLeftOutlined, PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { getProject, createEnvironment } from '../../services/project';
+import { getProject, createEnvironment, updateEnvironment, deleteEnvironment } from '../../services/project';
 import type { Project, Environment } from '../../types/project';
-
-const { Title } = Typography;
 
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +11,7 @@ const ProjectDetail: React.FC = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(false);
   const [isEnvModalOpen, setIsEnvModalOpen] = useState(false);
+  const [editingEnv, setEditingEnv] = useState<Environment | null>(null);
   const [form] = Form.useForm();
 
   const fetchProject = async () => {
@@ -33,17 +32,46 @@ const ProjectDetail: React.FC = () => {
     fetchProject();
   }, [id]);
 
-  const handleCreateEnv = async (values: any) => {
+  const handleEnvSubmit = async (values: any) => {
     if (!project) return;
     try {
-      await createEnvironment(project.id, values);
-      message.success('环境创建成功');
+      if (editingEnv) {
+        await updateEnvironment(project.id, editingEnv.id, values);
+        message.success('环境更新成功');
+      } else {
+        await createEnvironment(project.id, values);
+        message.success('环境创建成功');
+      }
       setIsEnvModalOpen(false);
+      setEditingEnv(null);
       form.resetFields();
-      fetchProject(); // Refresh to show new environment (assuming backend returns updated project or we fetch envs separately)
+      fetchProject();
     } catch (error) {
-      console.error('创建环境失败', error);
+      console.error(editingEnv ? '更新环境失败' : '创建环境失败', error);
     }
+  };
+
+  const handleEditEnv = (env: Environment) => {
+    setEditingEnv(env);
+    form.setFieldsValue(env);
+    setIsEnvModalOpen(true);
+  };
+
+  const handleDeleteEnv = async (envId: number) => {
+    if (!project) return;
+    try {
+      await deleteEnvironment(project.id, envId);
+      message.success('环境删除成功');
+      fetchProject();
+    } catch (error) {
+      console.error('删除环境失败', error);
+    }
+  };
+
+  const handleCancelEnv = () => {
+    setIsEnvModalOpen(false);
+    setEditingEnv(null);
+    form.resetFields();
   };
 
   const envColumns = [
@@ -71,10 +99,17 @@ const ProjectDetail: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      render: (_: any) => (
+      render: (_: any, record: Environment) => (
         <Space size="middle">
-          <Button type="text" icon={<EditOutlined />} title="编辑" />
-          <Button type="text" danger icon={<DeleteOutlined />} title="删除" />
+          <Button type="text" icon={<EditOutlined />} onClick={() => handleEditEnv(record)} title="编辑" />
+          <Popconfirm
+            title="确定要删除这个环境吗？"
+            onConfirm={() => handleDeleteEnv(record.id)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button type="text" danger icon={<DeleteOutlined />} title="删除" />
+          </Popconfirm>
         </Space>
       ),
     },
@@ -108,12 +143,11 @@ const ProjectDetail: React.FC = () => {
         tabList={[{ key: 'environments', tab: '环境管理' }]}
         activeTabKey="environments"
         tabBarExtraContent={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsEnvModalOpen(true)}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingEnv(null); form.resetFields(); setIsEnvModalOpen(true); }}>
             新建环境
           </Button>
         }
       >
-        {/* We assume project.environments is populated. If not, we might need a separate API call */}
         <Table 
           columns={envColumns} 
           dataSource={(project as any).environments || []} 
@@ -123,12 +157,12 @@ const ProjectDetail: React.FC = () => {
       </Card>
 
       <Modal
-        title="新建环境"
+        title={editingEnv ? "编辑环境" : "新建环境"}
         open={isEnvModalOpen}
-        onCancel={() => setIsEnvModalOpen(false)}
+        onCancel={handleCancelEnv}
         onOk={() => form.submit()}
       >
-        <Form form={form} layout="vertical" onFinish={handleCreateEnv}>
+        <Form form={form} layout="vertical" onFinish={handleEnvSubmit}>
           <Form.Item
             name="name"
             label="环境名称"
