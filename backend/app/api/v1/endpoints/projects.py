@@ -97,6 +97,10 @@ def create_environment(
     project = crud.crud_project.get_project(db=db, project_id=project_id)
     if not project:
         raise HTTPException(status_code=404, detail="未找到该项目")
+    
+    environment = crud.crud_project.create_environment(db=db, environment=environment_in, project_id=project_id)
+    return ApiResponse(data=environment)
+
 @router.put("/{project_id}/environments/{environment_id}", response_model=ApiResponse[schemas.Environment])
 def update_environment(
     *,

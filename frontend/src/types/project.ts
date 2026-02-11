@@ -6,6 +6,7 @@ export interface Project {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  environments?: Environment[];
 }
 
 export interface ProjectCreate {

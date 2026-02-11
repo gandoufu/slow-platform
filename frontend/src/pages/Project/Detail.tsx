@@ -120,9 +120,14 @@ const ProjectDetail: React.FC = () => {
   return (
     <div>
       <div style={{ marginBottom: 16 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/projects')}>
-          返回项目列表
-        </Button>
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/projects')}>
+            返回项目列表
+          </Button>
+          <Button type="primary" icon={<EditOutlined />} onClick={() => navigate(`/projects/${id}/apis`)}>
+            接口管理
+          </Button>
+        </Space>
       </div>
       
       <Card loading={loading}>

@@ -5,6 +5,7 @@ import Register from '../pages/Register';
 import Dashboard from '../pages/Dashboard';
 import ProjectList from '../pages/Project';
 import ProjectDetail from '../pages/Project/Detail';
+import ApiManagement from '../pages/Interface';
 import MainLayout from '../components/MainLayout';
 
 // Simple Auth Guard
@@ -27,6 +28,7 @@ const AppRouter: React.FC = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="projects" element={<ProjectList />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
+          <Route path="projects/:id/apis" element={<ApiManagement />} />
         </Route>
       </Routes>
     </BrowserRouter>
